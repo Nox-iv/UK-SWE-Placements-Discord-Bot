@@ -3,8 +3,17 @@
   "version": "1.0.0",
   "description": "Scrape placements from the web and post them in discord",
   "main": "index.js",
-  "author": "Nox-IV",
+  "author": {
+    "name": "Nox-IV",
+    "email": "iv@nox-iv.com",
+    "url": "https://nox-iv.com"
+  },
   "license": "CC-BY-NC-SA-4.0",
+  "homepage": "https://github.com/Nox-iv/UK-SWE-Placements-Discord-Bot",
+  "bugs": {
+    "url" : "https://github.com/Nox-iv/UK-SWE-Placements-Discord-Bot/issues",
+    "email" : "iv@nox-iv.com"
+  },
   "dependencies": {
     "axios": "^1.2.2",
     "cheerio": "^1.0.0-rc.12",

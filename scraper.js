@@ -137,11 +137,12 @@ async function handleHandshakePage(link) {
             { name: 'hss-global', value: process.env.HANDSHAKE_HSS_GLOBAL_COOKIE, domain: process.env.HANDSHAKE_COOKIE_DOMAIN },
         ]
     await page.setCookie(...cookies);
+    let data;
     try {
         await page.goto(link, {
             waitUntil: "networkidle0",
         });
-        const data = await page.evaluate(() => document.querySelector('*').outerHTML);
+        data = await page.evaluate(() => document.querySelector('*').outerHTML);
     } catch (e) {
         console.log(e);
         return;

@@ -27,25 +27,28 @@ client.once(Events.ClientReady, async c => {
         scraper.scrapePlacements();
     }, 600000)
 
+
     postPlacements(channel);
 
 });
 
+
 async function postPlacements(channel) {
     while(true) {
         var placements = await getUnpostedPlacements();
-        if (placements.length == 0) {
-            return;
+        if (placements.length != 0) {
+            console.log("Posting " + placements.length + " placements...");
+            for (var i = 0; i < placements.length; i++) {
+                await handleEmbed(channel, placements[i].PTitle, placements[i].PLink, placements[i].PLogo, placements[i].PCompany, placements[i].PLocation, placements[i].PDescription, placements[i].PDeadline, placements[i].PSalary);
+                await updatePlacement(placements[i].PLink);
+                await delay(150000);
+            }
         }
-        console.log("Posting " + placements.length + " placements...");
-        for (var i = 0; i < placements.length; i++) {
-            await handleEmbed(channel, placements[i].PTitle, placements[i].PLink, placements[i].PLogo, placements[i].PCompany, placements[i].PLocation, placements[i].PDescription, placements[i].PDeadline, placements[i].PSalary);
-            await updatePlacement(placements[i].PLink);
-            await new Promise(resolve => setTimeout(resolve, 150000));
-        }
-        await new Promise(resolve => setTimeout(resolve, 150000));
+        await delay(150000);
     }
 }
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function handleEmbed(channel, title, link, logo, company, location, description, deadline, salary) {
     if (logo.includes(".svg")) {

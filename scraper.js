@@ -137,10 +137,15 @@ async function handleHandshakePage(link) {
             { name: 'hss-global', value: process.env.HANDSHAKE_HSS_GLOBAL_COOKIE, domain: process.env.HANDSHAKE_COOKIE_DOMAIN },
         ]
     await page.setCookie(...cookies);
-    await page.goto(link, {
-        waitUntil: "networkidle0",
-    });
-    const data = await page.evaluate(() => document.querySelector('*').outerHTML);
+    try {
+        await page.goto(link, {
+            waitUntil: "networkidle0",
+        });
+        const data = await page.evaluate(() => document.querySelector('*').outerHTML);
+    } catch (e) {
+        console.log(e);
+        return;
+    }
     const $ = cheerio.load(data);
     await browser.close();
 

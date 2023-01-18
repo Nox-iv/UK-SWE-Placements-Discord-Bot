@@ -20,12 +20,12 @@ client.once(Events.ClientReady, async c => {
         activities: [{ name: `https://nox-iv.com/`, type: ActivityType.Watching }]
     });
 
-    var channel = await client.channels.cache.get('1063942879208296580');
+    var channel = await client.channels.cache.get('1023339462907940874');
 
     scraper.scrapePlacements()
     setInterval(async () => {
         scraper.scrapePlacements();
-    }, 600000)
+    }, 1800000)
 
 
     postPlacements(channel);

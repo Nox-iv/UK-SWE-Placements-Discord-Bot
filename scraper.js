@@ -5,6 +5,7 @@ const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 var placements = [];
+var newPlacements = false;
 
 // Start of the program
 // ============================================================================================================================
@@ -23,6 +24,7 @@ async function scrapePlacements() {
     await getRatePlacements();
     console.log("Handshake...");
     await getHandshakePlacements();
+    return newPlacements;
 }
 
 // Initial gets
@@ -241,29 +243,13 @@ async function createPlacement(title, link, logo, company, location, description
         const query = 'INSERT INTO placements (PTitle, PLink, PLogo, PCompany, PLocation, PDescription, PDeadline, PSalary) VALUES (?,?,?,?,?,?,?,?)';
         const [result] = await con.execute(query, [title, link, logo, company, location, description, deadline, salary]);
         placements.push(link);
+        newPlacements = true;
     } catch (err) {
         console.error(err);
     } finally {
         if (con) con.end();
     }
 }
-
-// async function checkPlacement(link) {
-//     let con = await createCon();
-//     try {
-//         const query = 'SELECT * FROM placements WHERE PLink = ?';
-//         const [result] = await con.execute(query, [link]);
-//         if (result.length == 0) {
-//             return false;
-//         } else {
-//             return true;
-//         }
-//     } catch (err) {
-//         console.error(err);
-//     } finally {
-//         if (con) con.end();
-//     }
-// }
 
 async function getAllPlacements() {
     let con = await createCon();

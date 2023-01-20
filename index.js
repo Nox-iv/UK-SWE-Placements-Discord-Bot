@@ -22,29 +22,25 @@ client.once(Events.ClientReady, async c => {
 
     var channel = await client.channels.cache.get('1023339462907940874');
 
-    scraper.scrapePlacements()
+    let res = await scraper.scrapePlacements()
+    if (res == true) postPlacements(channel);
     setInterval(async () => {
-        scraper.scrapePlacements();
+        res = await scraper.scrapePlacements();
+        if (res == true) postPlacements(channel);
     }, 1800000)
-
-
-    postPlacements(channel);
 
 });
 
 
 async function postPlacements(channel) {
-    while(true) {
-        var placements = await getUnpostedPlacements();
-        if (placements.length != 0) {
-            console.log("Posting " + placements.length + " placements...");
-            for (var i = 0; i < placements.length; i++) {
-                await handleEmbed(channel, placements[i].PTitle, placements[i].PLink, placements[i].PLogo, placements[i].PCompany, placements[i].PLocation, placements[i].PDescription, placements[i].PDeadline, placements[i].PSalary);
-                await updatePlacement(placements[i].PLink);
-                await delay(150000);
-            }
+    var placements = await getUnpostedPlacements();
+    if (placements.length != 0) {
+        console.log("Posting " + placements.length + " placements...");
+        for (var i = 0; i < placements.length; i++) {
+            await handleEmbed(channel, placements[i].PTitle, placements[i].PLink, placements[i].PLogo, placements[i].PCompany, placements[i].PLocation, placements[i].PDescription, placements[i].PDeadline, placements[i].PSalary);
+            await updatePlacement(placements[i].PLink);
+            await delay(150000);
         }
-        await delay(150000);
     }
 }
 
@@ -74,13 +70,15 @@ async function handleEmbed(channel, title, link, logo, company, location, descri
 }
 
 async function getUnpostedPlacements(link) {
-    let con = await createCon();
+    let con;
     try {
+        con = await createCon();
         const query = 'SELECT * FROM placements WHERE PPosted = "0"';
         const [result] = await con.execute(query);
         return result;
     } catch (err) {
         console.error(err);
+        return [];
     } finally {
         if (con) con.end();
     }

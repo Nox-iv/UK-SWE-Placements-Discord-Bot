@@ -23,7 +23,7 @@ client.once(Events.ClientReady, async c => {
     var channel = await client.channels.cache.get('1023339462907940874');
 
     let res = await scraper.scrapePlacements()
-    if (res == true) postPlacements(channel);
+    postPlacements(channel);
     setInterval(async () => {
         res = await scraper.scrapePlacements();
         if (res == true) postPlacements(channel);

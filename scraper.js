@@ -47,7 +47,7 @@ async function getBrightNetworksPlacements() {
 }
 
 async function getRatePlacements() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
     const page = await browser.newPage();
     await page.goto(process.env.RATEPLACEMNET_DOMAIN);
     const allResultsSelector = '.SearchResults-results';
@@ -59,7 +59,7 @@ async function getRatePlacements() {
 }
 
 async function getHandshakePlacements() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
     const page = await browser.newPage();
     const cookies =
         [
@@ -132,7 +132,7 @@ async function handleRatePlacementPage(data) {
 
 async function handleHandshakePage(link) {
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({args: ['--no-sandbox']});
     const page = await browser.newPage();
     const cookies =
         [

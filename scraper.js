@@ -1,8 +1,7 @@
 const axios = require('axios').default;
 const cheerio = require('cheerio');
-const mysql = require('mysql2/promise');
 const puppeteer = require('puppeteer');
-require('dotenv').config();
+const {MongoClient} = require('mongodb');
 
 var placements = [];
 var newPlacements = false;
@@ -238,45 +237,61 @@ async function getRatePlacementDescription(link) {
 // Database functions
 // ============================================================================================================================
 async function createPlacement(title, link, logo, company, location, description, deadline, salary) {
-    let con = await createCon();
+    let client;
     try {
-        const query = 'INSERT INTO placements (PTitle, PLink, PLogo, PCompany, PLocation, PDescription, PDeadline, PSalary) VALUES (?,?,?,?,?,?,?,?)';
-        const [result] = await con.execute(query, [title, link, logo, company, location, description, deadline, salary]);
+        client = await connectToMongo();
+        const collection = client.db(process.env.MONGO_DB).collection(process.env.MONGO_COLLECTION);
+        const doc = {
+            PTitle: title,
+            PLink: link,
+            PLogo: logo,
+            PCompany: company,
+            PLocation: location,
+            PDescription: description,
+            PDeadline: deadline,
+            PSalary: salary,
+            PPosted: 0
+        }
+        const res = await collection.insertOne(doc);
         placements.push(link);
         newPlacements = true;
+        return res;
     } catch (err) {
-        console.error(err);
+        console.log(err);
+        return;
     } finally {
-        if (con) con.end();
+        if (client) {
+            await client.close();
+        }
     }
 }
 
 async function getAllPlacements() {
-    let con = await createCon();
+    let client;
     try {
-        const query = 'SELECT * FROM placements';
-        const [result] = await con.execute(query);
-        return result;
+        client = await connectToMongo();
+        const collection = client.db(process.env.MONGO_DB).collection(process.env.MONGO_COLLECTION);
+        const res = await collection.find().toArray();
+        return res;
     } catch (err) {
-        console.error(err);
+        console.log(err);
+        return;
     } finally {
-        if (con) con.end();
+        if (client) {
+            await client.close();
+        }
     }
 }
 
-async function createCon() {
-    let con;
+async function connectToMongo() {
     try {
-        con = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USERNAME,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB
-        });
-    } catch (err) {
-        console.error(err);
+        const client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
+        await client.connect();
+        return client;
+    } catch (e) {
+        console.log(e);
+        return false;
     }
-    return con;
 }
 // ============================================================================================================================
 

@@ -1,9 +1,13 @@
 "use strict";
 
-require('dotenv/config');
-const mysql = require('mysql2/promise');
+const dotenv = require('dotenv')
+const dotenvExpand = require('dotenv-expand');
 const { Client, EmbedBuilder, Events, GatewayIntentBits, ActivityType } = require('discord.js')
+const {MongoClient} = require('mongodb');
 const scraper = require('./scraper');
+
+var myEnv = dotenv.config()
+dotenvExpand.expand(myEnv);
 
 const client = new Client({
     intents: [
@@ -20,7 +24,7 @@ client.once(Events.ClientReady, async c => {
         activities: [{ name: `https://nox-iv.com/`, type: ActivityType.Watching }]
     });
 
-    var channel = await client.channels.cache.get('1023339462907940874');
+    var channel = await client.channels.cache.get(process.env.POSTING_CHANNEL);
 
     let res = await scraper.scrapePlacements()
     postPlacements(channel);
@@ -69,47 +73,50 @@ async function handleEmbed(channel, title, link, logo, company, location, descri
     return;
 }
 
-async function getUnpostedPlacements(link) {
-    let con;
+async function getUnpostedPlacements() {
+    let client;
     try {
-        con = await createCon();
-        const query = 'SELECT * FROM placements WHERE PPosted = "0"';
-        const [result] = await con.execute(query);
-        return result;
+        client = await connectToMongo();
+        const collection = client.db(process.env.MONGO_DB).collection(process.env.MONGO_COLLECTION);
+        const res = await collection.find({ PPosted: 0 }).toArray();
+        return res;
     } catch (err) {
-        console.error(err);
-        return [];
+        console.log(err);
+        return;
     } finally {
-        if (con) con.end();
+        if (client) {
+            await client.close();
+        }
     }
 }
 
 async function updatePlacement(link) {
-    let con = await createCon();
+    let client;
     try {
-        const query = 'UPDATE placements SET PPosted = "1" WHERE PLink = ?';
-        const [result] = await con.execute(query, [link]);
-        return result;
+        client = await connectToMongo();
+        const collection = client.db(process.env.MONGO_DB).collection(process.env.MONGO_COLLECTION);
+        const res = await collection.updateOne({ PLink : link }, { $set: { PPosted : 1 } });
+        if (res.modifiedCount == 0 && res.matchedCount == 0) return false;
+        return true;
     } catch (err) {
-        console.error(err);
+        console.log(err);
+        return false;
     } finally {
-        if (con) con.end();
+        if (client) {
+            await client.close();
+        }
     }
 }
 
-async function createCon() {
-    let con;
+async function connectToMongo() {
     try {
-        con = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USERNAME,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB
-        });
-    } catch (err) {
-        console.error(err);
+        const client = new MongoClient(process.env.MONGO_URI, { useUnifiedTopology: true });
+        await client.connect();
+        return client;
+    } catch (e) {
+        console.log(e);
+        return false;
     }
-    return con;
 }
 
 client.login(process.env.TOKEN);
